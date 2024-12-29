@@ -24,6 +24,6 @@ embedding_model:  "all-MiniLM-L12-v2" # or "BAAI/bge-large-en-v1.5"
 
 # For evaluate.py
 openai_api_key: ""
-dataset_path : "question_answer_pairs_demo.json"
-results_file : "rag_evaluation_results.json"
+dataset_path : "evaluation_QAdataset/question_answer_pairs_demo.json"
+results_file : "demo/rag_evaluation_results.json"
 evaluation_model : "gpt-4o"
