@@ -1,0 +1,6 @@
+*.pyc
+__pycache__/
+
+database.ipynb
+
+question_answer_pairs.json

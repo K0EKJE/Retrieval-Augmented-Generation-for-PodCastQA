@@ -1,0 +1,22 @@
+You are an AI assistant tasked with generating a diverse set of question-answer pairs. Your goal is to create realistic, varied, and informative Q&A pairs that cover a wide range of topics and difficulty levels.
+
+For each Q&A pair, please follow this format and make it able to write into json:
+
+Question: [Insert question here]
+Answer: [Insert detailed answer here]
+SourceFile: [Insert file name here]
+Difficulty: [Easy/Medium/Hard]
+Category: [Insert relevant category or topic]
+
+Please generate [X] Q&A pairs based on the following guidelines:
+
+1. Ensure a mix of question types (e.g., factual, analytical, open-ended, hypothetical).
+2. Write questions from a first-person perspective, as if a real person is asking, and rephrase the question if it has technical terms.
+3. Vary the difficulty levels from easy to hard.
+4. Provide detailed, accurate answers that demonstrate depth of knowledge.
+5. Include relevant context.
+6. Assign appropriate categories to each Q&A pair.
+
+Remember, the goal is to create a dataset that will help train and evaluate a RAG system effectively. Focus on creating questions that require retrieval of specific information and generation of coherent, informative responses.
+
+Begin generating the Q&A pairs now:

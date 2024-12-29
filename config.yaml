@@ -1,0 +1,29 @@
+# For buildDB.py
+# Config for creating a Chroma Vector Database
+# Paths
+document_path: "data/example_docs"
+save_directory: "VectorStores" # directory for vector DB, it will have two subdirectories for faiss and chroma
+
+# PDF Processing
+chunk_size: 1000
+chunk_overlap: 200
+
+# Hybrid Search
+raw_rank_k: 10
+rerank_k: 5
+retriever_weights: [0.3, 0.35, 0.35] # BM25, FAISS, Chorma
+
+# Embedding and Reranking Models
+embedding_model:  "all-MiniLM-L12-v2" # or "BAAI/bge-large-en-v1.5"
+
+# BAAI/bge-large-en-v1.5, 335M parameters, embedding dimension 1024
+# BAAI/bge-reranker-large, 560M parameters
+
+# all-MiniLM-L12-v2, 33.4M params, embedding dimension 384
+# cross-encoder/ms-marco-MiniLM-L-12-v2, 33.4M params
+
+# For evaluate.py
+openai_api_key: ""
+dataset_path : "question_answer_pairs_demo.json"
+results_file : "rag_evaluation_results.json"
+evaluation_model : "gpt-4o"
