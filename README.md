@@ -1,13 +1,13 @@
 # Retrieval-Augmented Generation (RAG) for PodCast Q&A
-## Background
+## 1. Background
 
-Andrew Huberman, Ph.D., is a neuroscientist and tenured professor at Stanford School.
+Andrew Huberman, Ph.D., is a neuroscientist and tenured professor at Stanford.
 In 2021, He launched the [Huberman Lab podcast](https://www.hubermanlab.com/about). The podcast is frequently ranked in the top 10 of all podcasts globally and is often ranked #1 in the categories of Science, Education, and Health & Fitness.
 
 **The goal of the project** was to retrieve relevant information across different  episodes and generate response based on user's query. The response will be  largely based on the context provided by Andrew Huberman in his conversations. The project is mostly written with [**LangChain**](https://www.langchain.com/).
 
 Current experiment shows prompt engineering, choice of chunk size/overlap, reranker are more effective compared with model size.
-## Model Details
+## 2. Model Details
 | Model             | Param Size    | Function |
 | ----------------- | ------------  | ------- |
 |  [Llama 3.2](https://ollama.com/library/llama3.2)       | 3B             |Generator      
@@ -18,7 +18,7 @@ Current experiment shows prompt engineering, choice of chunk size/overlap, reran
 | [ms-marco-MiniLM-L-12-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-12-v2)  | 33.4M   |Rerank    
 
 
-## Work flow
+## 3. Work flow
 1. Process input documents and split into desired size of chunks.
 2. Create vector embeddings from the chunks using a sentense transformer and store them in a [Chroma database](https://github.com/chroma-core/chroma). I used a [BGE model](https://github.com/FlagOpen/FlagEmbedding/tree/master) and a smaller [all-MiniLM-L12-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L12-v2). The BGE and L12 model convert text into  1024 and 384 dimension embeddings, respectively. 
 3. Perform similarity search and retrieve relevant chunks from the database. I used a hybrid search approch, which is an ensemble retriever combining [BM25](https://python.langchain.com/docs/integrations/retrievers/bm25/) and semantic search.
@@ -27,7 +27,37 @@ Current experiment shows prompt engineering, choice of chunk size/overlap, reran
 6. Call `gpt-4o` to compare AI answer with reference using [OpenAI API](https://openai.com/index/openai-api/), and evalute the AI response on 'Relevance', 'Accuracy', 'Completeness', 'Conciseness', in a scale 1-5. recall@K is also measured.
 - **On going experimentation: query augmentation, finetune Llama on domain specific QA datasets, DPO...**
 
-## Usage (See demo notebook)
+
+## 4. Advance RAG features
+### Query Augmentation
+
+**Rewrite**
+```
+Original Query: what if I'm anxious?
+Expanded Query: Here are 4 related ideas or questions:
+                1. Physiological Response to Anxiety: How does anxiety affect the body's physiological responses, such as heart rate, blood pressure, and respiration? Are there any specific biomarkers or physiological changes that can be measured to assess the level of anxiety?
+                2. Neurotransmitters and Anxiety: What role do neurotransmitters like serotonin, dopamine, and GABA play in regulating mood and emotions, particularly during anxious states? Can certain dietary supplements, medications, or therapies targeting these neurotransmitters help alleviate anxiety symptoms?
+                3. Social and Environmental Triggers for Anxiety: What are the common social and environmental triggers that can exacerbate or induce anxiety? How do factors like social media, news, or personal expectations influence an individual's anxiety levels, and what strategies can be employed to mitigate these triggers?
+                4. Coping Mechanisms for Managing Anxiety: What evidence-based coping mechanisms and stress-reduction techniques are effective in managing anxiety? Can mindfulness practices
+Rewritten Query: What are the physiological, neurological, social, and behavioral factors that contribute to anxiety, and what effective coping mechanisms and interventions can be employed to manage anxiety symptoms? Physiological responses to anxiety Neurotransmitters and anxiety management. Social and environmental triggers for anxiety. Coping mechanisms and stress-reduction techniques
+```
+**Hyde (Hypothetical Document Embedding)**
+```
+Original Query: what if I'm anxious?
+Hallucination: If you are anxious, recognize that anxiety is a normal and adaptive response to perceived threats. It serves as an alert system to help you respond to danger. However, excessive or persistent anxiety can impair daily functioning. Key strategies for managing anxiety include:Mindfulness practices to regulate emotions. Cognitive-behavioral therapy (CBT) techniques to reframe negative thoughts. Physical activity to reduce stress and improve mood. Grounding techniques to focus on the present moment. It is also essential to identify personal triggers and develop coping mechanisms to manage overwhelming feelings.
+```
+### Retrieval Augmentation
+* **Small to big indexing (Recursive retrieval)**: Starting with smaller chunks and recursively expanding to parent chunk.
+
+* **Chunking by passage structure**:
+Based on information structure, ensuring coherence and semantic integrety of chunks. 
+
+### Multi-stage LLM Finetuing 
+The PodCast covers a wide range of topics, including Psychology, Neuroscience, Biology, Behavioral Science, Health & Fitness... 
+* General QA
+* Domain Specific QA
+* Direct Preference Optimization (DPO)
+## 5. Usage (See demo notebook)
 
 * Install dependencies
 ```
@@ -45,10 +75,8 @@ python query.py "[Insert your question here]"
 ```
 python evaluate.py
 ``` 
-## QA Dataset
-The QA dataset was generated with GPT4o. The prompt can be found in `evaluation_QAdataset/prompt_template_QA_dataset.txt`. It is designed to ensure diversity and varied difficulty. The demo has 17 questions from first 3 documents (the full dataset has more entries).
 
-## Instructions
+## 6. Instructions
 #### Docs
 * Add '.pdf','.doc', or '.docx' files to folder and set `document_path` in `config.yaml`. The demo has 27 transcripts for the PodCast.
 * Set `save_directory` in `config.yaml` to specify the path to create FAISS and Chorma database. 
@@ -66,23 +94,4 @@ The QA dataset was generated with GPT4o. The prompt can be found in `evaluation_
 * An OpenAI key is needed to run `evaluate.py`, since the project uses `gpt-4o` as the final evalutaion model.
 Set `openai_api_key` variable  in  `config.yaml`. 
 
-* `prompt_template_QA_dataset.txt` contains the  prompt template I used to help me construct a QA dataset with GPT4o.
-
-## Advance RAG features
-### Query Augmentation
-Set `augmentation` to `rewrite` or `hyde` (**Remark**: Doubles inference time).
-#### Rewrite
-```
-Original Query: what if I'm anxious?
-Expanded Query: Here are 4 related ideas or questions:
-                1. Physiological Response to Anxiety: How does anxiety affect the body's physiological responses, such as heart rate, blood pressure, and respiration? Are there any specific biomarkers or physiological changes that can be measured to assess the level of anxiety?
-                2. Neurotransmitters and Anxiety: What role do neurotransmitters like serotonin, dopamine, and GABA play in regulating mood and emotions, particularly during anxious states? Can certain dietary supplements, medications, or therapies targeting these neurotransmitters help alleviate anxiety symptoms?
-                3. Social and Environmental Triggers for Anxiety: What are the common social and environmental triggers that can exacerbate or induce anxiety? How do factors like social media, news, or personal expectations influence an individual's anxiety levels, and what strategies can be employed to mitigate these triggers?
-                4. Coping Mechanisms for Managing Anxiety: What evidence-based coping mechanisms and stress-reduction techniques are effective in managing anxiety? Can mindfulness practices
-Rewritten Query: What are the physiological, neurological, social, and behavioral factors that contribute to anxiety, and what effective coping mechanisms and interventions can be employed to manage anxiety symptoms? Physiological responses to anxiety Neurotransmitters and anxiety management. Social and environmental triggers for anxiety. Coping mechanisms and stress-reduction techniques
-```
-#### Hyde (Hypothetical Document Embedding)
-```
-Original Query: what if I'm anxious?
-Hallucination: If you are anxious, recognize that anxiety is a normal and adaptive response to perceived threats. It serves as an alert system to help you respond to danger. However, excessive or persistent anxiety can impair daily functioning. Key strategies for managing anxiety include:Mindfulness practices to regulate emotions. Cognitive-behavioral therapy (CBT) techniques to reframe negative thoughts. Physical activity to reduce stress and improve mood. Grounding techniques to focus on the present moment. It is also essential to identify personal triggers and develop coping mechanisms to manage overwhelming feelings.
-```
+* The QA dataset was generated with GPT4o. The prompt can be found in `evaluation_QAdataset/prompt_template_QA_dataset.txt`. It is designed to ensure diversity and varied difficulty. The demo has 17 questions from first 3 documents (the full dataset has more entries).
