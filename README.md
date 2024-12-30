@@ -61,13 +61,28 @@ The QA dataset was generated with GPT4o. The prompt can be found in `evaluation_
 * `rerank_k`: Top k chunks to return after reranking
 * `retriever_weights`: The system uses a hybrid search approch, this param specifies weight of  BM25, FAISS, Chorma retrievers
 * `embedding_model`: The model choice for sentence transformer, i.e. the embedding model. Specifying this param will determine  reranker model accordingly. The model used in this project are `all-MiniLM-L12-v2` with `ms-marco-MiniLM-L-12-v` and `BAAI/bge-large-en-v1.5` with `BAAI/bge-reranker-large`
-
+* `augmentation`: Whether to use query augmentaion. 
 #### Some notes
 * An OpenAI key is needed to run `evaluate.py`, since the project uses `gpt-4o` as the final evalutaion model.
 Set `openai_api_key` variable  in  `config.yaml`. 
 
 * `prompt_template_QA_dataset.txt` contains the  prompt template I used to help me construct a QA dataset with GPT4o.
 
-
-
-
+## Advance RAG features
+### Query Augmentation
+Set `augmentation` to `rewrite` or `hyde` (**Remark**: Doubles inference time).
+#### Rewrite
+```
+Original Query: what if I'm anxious?
+Expanded Query: Here are 4 related ideas or questions:
+                1. Physiological Response to Anxiety: How does anxiety affect the body's physiological responses, such as heart rate, blood pressure, and respiration? Are there any specific biomarkers or physiological changes that can be measured to assess the level of anxiety?
+                2. Neurotransmitters and Anxiety: What role do neurotransmitters like serotonin, dopamine, and GABA play in regulating mood and emotions, particularly during anxious states? Can certain dietary supplements, medications, or therapies targeting these neurotransmitters help alleviate anxiety symptoms?
+                3. Social and Environmental Triggers for Anxiety: What are the common social and environmental triggers that can exacerbate or induce anxiety? How do factors like social media, news, or personal expectations influence an individual's anxiety levels, and what strategies can be employed to mitigate these triggers?
+                4. Coping Mechanisms for Managing Anxiety: What evidence-based coping mechanisms and stress-reduction techniques are effective in managing anxiety? Can mindfulness practices
+Rewritten Query: What are the physiological, neurological, social, and behavioral factors that contribute to anxiety, and what effective coping mechanisms and interventions can be employed to manage anxiety symptoms? Physiological responses to anxiety Neurotransmitters and anxiety management. Social and environmental triggers for anxiety. Coping mechanisms and stress-reduction techniques
+```
+#### Hyde (Hypothetical Document Embedding)
+```
+Original Query: what if I'm anxious?
+Hallucination: If you are anxious, recognize that anxiety is a normal and adaptive response to perceived threats. It serves as an alert system to help you respond to danger. However, excessive or persistent anxiety can impair daily functioning. Key strategies for managing anxiety include:Mindfulness practices to regulate emotions. Cognitive-behavioral therapy (CBT) techniques to reframe negative thoughts. Physical activity to reduce stress and improve mood. Grounding techniques to focus on the present moment. It is also essential to identify personal triggers and develop coping mechanisms to manage overwhelming feelings.
+```
