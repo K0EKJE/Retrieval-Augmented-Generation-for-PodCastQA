@@ -24,9 +24,8 @@ def augment_query_hyde(original_query, chat_model):
 
         Hypothetical answer:"""
     )
-    print('hyde used')
     # Generate the hypothetical answer
-    augmented_query = chat_model.predict(hyde_template.format(query=original_query), num_predict = 300,temperature = 1)
+    augmented_query = chat_model.predict(hyde_template.format(query=original_query), num_predict = 300,temperature = 0.3)
     
     return augmented_query
 
@@ -47,7 +46,7 @@ def augment_query_rewrite(original_query, chat_model):
     )
 
     # Generate expanded ideas
-    expansion_result = chat_model.predict(expansion_template.format(original_query=original_query), num_predict = 200,temperature = 1)
+    expansion_result = chat_model.predict(expansion_template.format(original_query=original_query), num_predict = 200,temperature = 0.9)
 
     # Create a prompt template for refining the query
     refinement_template = PromptTemplate(
@@ -68,7 +67,7 @@ def augment_query_rewrite(original_query, chat_model):
         original_query=original_query,
         expansion_result=expansion_result,
         num_predict = 50
-    ),temperature = 1)
+    ),temperature = 0.3)
 
     return refined_query
 
@@ -117,6 +116,7 @@ def answer_with_rag(faiss_store, chroma_store, query = '', augmentation = 'None'
         question=query
     ).text,
     max_tokens=1000,
+    temperature = 0
     )
 
     return results, answer
