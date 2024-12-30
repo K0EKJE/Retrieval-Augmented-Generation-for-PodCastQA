@@ -13,7 +13,7 @@ from config import config
 from buildDB import VectorStoreBuilder, HybridSearcher
 
 from query import answer_with_rag
-
+import query
 # Function to load your dataset
 def load_dataset(file_path):
     with open(file_path, 'r') as f:
@@ -23,7 +23,7 @@ def evaluate_qa_pair(chat_model, qa_pair):
     
     question = qa_pair['Question']
     true_answer = qa_pair['Answer']
-    results, ai_answer = answer_with_rag(faiss_store, chroma_store, question)
+    results, ai_answer = answer_with_rag(faiss_store, chroma_store, question, augmentation = config['augmentation'])
 
     include_source = False
     for doc in results:

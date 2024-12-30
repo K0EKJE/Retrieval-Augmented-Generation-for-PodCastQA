@@ -27,3 +27,6 @@ openai_api_key: ""
 dataset_path : "evaluation_QAdataset/question_answer_pairs_demo.json"
 results_file : "demo/rag_evaluation_results.json"
 evaluation_model : "gpt-4o"
+
+# query augmentation
+augmentation: "None" # or "hyde", "rewrite"
