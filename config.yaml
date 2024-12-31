@@ -5,13 +5,14 @@ document_path: "data/example_docs"
 save_directory: "VectorStores" # directory for vector DB, it will have two subdirectories for faiss and chroma
 
 # PDF Processing
+chunk_method: "topic" # "sliding_window"
 chunk_size: 1000
 chunk_overlap: 200
 
 # Hybrid Search
 raw_rank_k: 10
 rerank_k: 5
-retriever_weights: [0.3, 0.35, 0.35] # BM25, FAISS, Chorma
+retriever_weights: [0.5, 0.25, 0.25] # BM25, FAISS, Chorma
 
 # Embedding and Reranking Models
 embedding_model:  "all-MiniLM-L12-v2" # or "BAAI/bge-large-en-v1.5"

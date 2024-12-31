@@ -2,6 +2,7 @@
 import yaml
 import shutil
 import os
+import re
 from typing import List, Tuple, Dict, Any
 from tqdm import tqdm
 from config import config
@@ -22,16 +23,44 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain")
 warnings.filterwarnings("ignore", category=UserWarning, module="langchain")
 
-
 class PDFProcessor:
     """Handles PDF loading and text splitting operations"""
     
-    def __init__(self, chunk_size: int = 1000, chunk_overlap: int = 200):
+    def __init__(self, method: str = 'topic', chunk_size: int = 1000, chunk_overlap: int = 200):
+        self.method = method
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap
         )
-    
+
+    def split_by_topics(self, text: str, metadata: dict) -> List[Document]:
+        """Split text based on timestamps and topics, then further split by chunk size"""
+        pattern = r'(\d{2}:\d{2})\s+(.+?)\n\n([\s\S]+?)(?=\n\n\d{2}:\d{2}|\Z)'
+        chunks = []
+
+        for match in re.finditer(pattern, text, re.MULTILINE):
+            timestamp, topic, content = match.groups()
+            if content.strip():
+                chunk_metadata = metadata.copy()
+                chunk_metadata.update({
+                    'timestamp': timestamp,
+                    'topic': topic
+                })
+                
+                # Create a temporary Document for the entire topic content
+                temp_doc = Document(page_content=content.strip(), metadata=chunk_metadata)
+                
+                # Split the topic content if it exceeds chunk_size
+                if len(content) > self.chunk_size:
+                    sub_chunks = self.text_splitter.split_documents([temp_doc])
+                    chunks.extend(sub_chunks)
+                else:
+                    chunks.append(temp_doc)
+
+        return chunks
+
     def load_documents(self, document_directory: str) -> List[Document]:
         """
         Load multiple PDFs and Word documents from a directory
@@ -50,18 +79,23 @@ class PDFProcessor:
                     loader = UnstructuredWordDocumentLoader(file_path)
                 
                 docs = loader.load()
-                # Add metadata about the source file
+                
+                # Apply the selected chunking method
                 for doc in docs:
                     doc.metadata['source_file'] = file
+                    if self.method == 'topic':
+                        split_docs = self.split_by_topics(doc.page_content, doc.metadata)
+                    elif self.method == 'sliding_window':
+                        split_docs = self.text_splitter.split_documents([doc])
+                    else:
+                        raise ValueError(f"Unknown chunking method: {self.method}")
+                    documents.extend(split_docs)
                 
-                documents.extend(docs)
             except Exception as e:
                 print(f"Error loading {file}: {str(e)}")
         
-        # Split documents
-        split_docs = self.text_splitter.split_documents(documents)
-        print(f"Loaded {len(split_docs)} document chunks from {len(doc_files)} documents")
-        return split_docs
+        print(f"Loaded {len(documents)} document chunks from {len(doc_files)} documents")
+        return documents
 
 class VectorStoreBuilder:
     """Handles creation and management of vector stores"""
@@ -201,7 +235,6 @@ class HybridSearcher:
         # Return only the top k results
         return self.rerank_with_cross_encoder(query, results)
         
-
     def analyze_results(self, query: str) -> Dict[str, Any]:
         """
         Analyze search results
